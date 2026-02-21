@@ -1,5 +1,5 @@
 // src/lib/schema.ts
-import { int, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { int, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
 
 export const stories = sqliteTable('stories', {
   id: int().primaryKey({ autoIncrement: true }),
@@ -12,9 +12,15 @@ export const stories = sqliteTable('stories', {
   updatedAt: int({ mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 })
 
+export const REACTION_TYPES = ['heart', 'clap', 'wow', 'fire'] as const
+export type ReactionType = typeof REACTION_TYPES[number]
+
 export const reactions = sqliteTable('reactions', {
   id: int().primaryKey({ autoIncrement: true }),
   storyId: int().notNull().references(() => stories.id, { onDelete: 'cascade' }),
   fingerprint: text().notNull(),
+  type: text().$type<ReactionType>().notNull(),
   createdAt: int({ mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-})
+}, (table) => ({
+  uniqueReaction: unique().on(table.storyId, table.fingerprint, table.type),
+}))

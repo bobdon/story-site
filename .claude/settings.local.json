@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(head:*)",
+      "Bash(cd /c/Users/bobdo/development/story-site && npx tsc --noEmit 2>&1)",
+      "Bash(cd /c/Users/bobdo/development/story-site && npm run db:generate 2>&1)",
+      "Bash(cd /c/Users/bobdo/development/story-site && npm run db:migrate 2>&1)"
+    ]
+  }
+}
