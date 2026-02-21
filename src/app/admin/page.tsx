@@ -1,25 +1,39 @@
 import { db } from '@/lib/db'
-import { stories } from '@/lib/schema'
-import { desc } from 'drizzle-orm'
+import { stories, reactions } from '@/lib/schema'
+import { desc, count, eq } from 'drizzle-orm'
 import { logout } from '@/actions/auth'
 import Link from 'next/link'
 
 export default async function AdminPage() {
-  const allStories = await db
-    .select({
-      id: stories.id,
-      title: stories.title,
-      published: stories.published,
-      publishedAt: stories.publishedAt,
-      updatedAt: stories.updatedAt,
-    })
-    .from(stories)
-    .orderBy(desc(stories.updatedAt))
+  const [allStories, reactionCounts] = await Promise.all([
+    db
+      .select({
+        id: stories.id,
+        title: stories.title,
+        published: stories.published,
+        publishedAt: stories.publishedAt,
+        updatedAt: stories.updatedAt,
+      })
+      .from(stories)
+      .orderBy(desc(stories.updatedAt)),
+    db
+      .select({ storyId: reactions.storyId, total: count() })
+      .from(reactions)
+      .groupBy(reactions.storyId),
+  ])
+
+  const reactionMap = Object.fromEntries(reactionCounts.map((r) => [r.storyId, r.total]))
+  const published = allStories.filter((s) => s.published).length
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-16">
       <div className="flex items-center justify-between mb-10">
-        <h1 className="text-2xl font-semibold">Stories</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Stories</h1>
+          <p className="text-sm text-zinc-400 mt-0.5">
+            {published} published · {allStories.length - published} draft
+          </p>
+        </div>
         <div className="flex items-center gap-4">
           <Link
             href="/admin/stories/new"
@@ -53,15 +67,22 @@ export default async function AdminPage() {
                     </span>
                   )}
                 </div>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    story.published
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
-                  }`}
-                >
-                  {story.published ? 'Published' : 'Draft'}
-                </span>
+                <div className="flex items-center gap-3">
+                  {(reactionMap[story.id] ?? 0) > 0 && (
+                    <span className="text-sm text-zinc-400">
+                      {reactionMap[story.id]} reaction{reactionMap[story.id] === 1 ? '' : 's'}
+                    </span>
+                  )}
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      story.published
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
+                    }`}
+                  >
+                    {story.published ? 'Published' : 'Draft'}
+                  </span>
+                </div>
               </Link>
             </li>
           ))}

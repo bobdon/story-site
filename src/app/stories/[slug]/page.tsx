@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import Reactions from "@/components/Reactions";
 import { headers } from "next/headers";
 import { createHash } from "crypto";
+import { getReadingTime } from "@/lib/utils";
 
 async function getFingerprint() {
   const h = await headers();
@@ -63,15 +64,18 @@ export default async function StoryPage({
           <h1 className="text-3xl font-semibold tracking-tight mb-3">
             {story.title}
           </h1>
-          {story.publishedAt && (
-            <time className="text-sm text-zinc-500">
-              {story.publishedAt.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-          )}
+          <div className="flex items-center gap-3 text-sm text-zinc-500">
+            {story.publishedAt && (
+              <time>
+                {story.publishedAt.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </time>
+            )}
+            <span>{getReadingTime(story.content)}</span>
+          </div>
         </header>
 
         <div className="leading-8 text-zinc-800 dark:text-zinc-200 [&>*+*]:mt-5">

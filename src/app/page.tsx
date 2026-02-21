@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { stories } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
+import { getExcerpt } from "@/lib/utils";
 
 export default async function Home() {
   const posts = await db
@@ -9,6 +10,7 @@ export default async function Home() {
       id: stories.id,
       title: stories.title,
       slug: stories.slug,
+      content: stories.content,
       publishedAt: stories.publishedAt,
     })
     .from(stories)
@@ -22,18 +24,15 @@ export default async function Home() {
       {posts.length === 0 ? (
         <p className="text-zinc-500">No stories published yet.</p>
       ) : (
-        <ul className="space-y-6">
+        <ul className="space-y-10">
           {posts.map((post) => (
             <li key={post.id}>
-              <Link
-                href={`/stories/${post.slug}`}
-                className="group block"
-              >
-                <h2 className="text-lg font-medium group-hover:underline">
+              <Link href={`/stories/${post.slug}`} className="group block">
+                <h2 className="text-lg font-medium group-hover:underline mb-1">
                   {post.title}
                 </h2>
                 {post.publishedAt && (
-                  <time className="text-sm text-zinc-500">
+                  <time className="text-sm text-zinc-400">
                     {post.publishedAt.toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
@@ -41,6 +40,9 @@ export default async function Home() {
                     })}
                   </time>
                 )}
+                <p className="mt-2 text-sm text-zinc-500 leading-relaxed">
+                  {getExcerpt(post.content)}
+                </p>
               </Link>
             </li>
           ))}
